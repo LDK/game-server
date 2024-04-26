@@ -1,0 +1,32 @@
+[
+  {
+    "model": "portal.gametitle",
+    "fields": {
+      "title": "Uno",
+      "url": "/uno",
+      "description": "Fast-paced card game for 2-10 players.",
+      "category": "Card Games",
+      "release_date": "2024-04-25"
+    }
+  },
+  {
+    "model": "portal.gametitle",
+    "fields": {
+      "title": "Connect Four",
+      "url": "/four",
+      "description": "Classic two-player game of strategy.",
+      "category": "Board Games",
+      "release_date": "2024-04-25"
+    }
+  },
+  {
+    "model": "portal.gametitle",
+    "fields": {
+      "title": "President",
+      "url": "/president",
+      "description": "Strategic card game for 3-7 players.",
+      "category": "Card Games",
+      "release_date": "2024-04-25"
+    }
+  }
+]
