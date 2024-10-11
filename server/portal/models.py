@@ -1,7 +1,12 @@
+from typing import Type
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 
-User = get_user_model()
+def get_custom_user_model() -> Type[Model]:
+    return get_user_model()
+
+User = get_custom_user_model()
 
 class GameTitle(models.Model):
     id = models.AutoField(primary_key=True)
@@ -15,7 +20,7 @@ class GameTitle(models.Model):
     def __str__(self):
         return self.title
     
-class GamePlayer(models.Model):
+class Player(models.Model):
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
     cpu_name = models.CharField(max_length=100, blank=True, null=True)
     specifics = models.JSONField(default=dict)  # Player-specific data
@@ -23,12 +28,21 @@ class GamePlayer(models.Model):
     def __str__(self):
         return self.user.username if self.user is not None else self.cpu_name
 
+class GameInvite(models.Model):
+    game = models.ForeignKey('Game', on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sender')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recipient')
+    date_sent = models.DateField(auto_now_add=True)
+    declined = models.BooleanField(default=False)
+    accepted = models.BooleanField(default=False)
+    expired = models.BooleanField(default=False)
+
 class Game(models.Model):
     game_title = models.ForeignKey(GameTitle, on_delete=models.CASCADE)
     starter = models.ForeignKey(User, on_delete=models.CASCADE)
     players = models.ManyToManyField(
-        GamePlayer,
-        through='GamePlayerMembership',
+        Player,
+        through='GamePlayer',
         related_name='games'
     )
     date_created = models.DateField(auto_now_add=True)
@@ -39,7 +53,7 @@ class Game(models.Model):
     last_move = models.JSONField(blank=True, null=True)
     last_move_ts = models.DateTimeField(blank=True, null=True)
     turn = models.ForeignKey(
-        GamePlayer,
+        Player,
         on_delete=models.SET_NULL,
         related_name='turn_in_games',
         blank=True,
@@ -51,10 +65,10 @@ class Game(models.Model):
     def __str__(self):
         return f'{self.game_title.title} - Game #{self.id}'
 
-  
-class GamePlayerMembership(models.Model):
+
+class GamePlayer(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    game_player = models.ForeignKey(GamePlayer, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
     starter = models.BooleanField(default=False)
     order = models.SmallIntegerField()
     date_joined = models.DateField(auto_now_add=True)
@@ -63,8 +77,18 @@ class GamePlayerMembership(models.Model):
 
     class Meta:
         unique_together = ('game', 'order')
-        verbose_name = 'Game Player Membership'
-        verbose_name_plural = 'Game Player Memberships'
+        verbose_name = 'Game Player'
+        verbose_name_plural = 'Game Players'
 
     def __str__(self):
-        return f'{self.game_player} in Game #{self.game.id}'
+        return f'{self.player} in Game #{self.game.id}'
+
+class GameLog(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    action = models.CharField(max_length=100)
+    specifics = models.JSONField(default=dict)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.action} by {self.player} in Game #{self.game.id}'

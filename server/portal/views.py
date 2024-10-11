@@ -17,6 +17,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 class RefreshTokenView(TokenRefreshView):
     permission_classes = (permissions.AllowAny,)
+    print("RefreshTokenView")
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -35,13 +36,17 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class GameTitleViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows titles to be viewed or edited.
-    """
-    queryset = GameTitle.objects.all().order_by('title')
-    serializer_class = GameTitleSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class GameTitleViewSet(APIView):
+    permission_classes = (AllowAny,)
+    def get(self, request, format=None):
+        print("GameTitleViewSet")
+        """
+        API endpoint that allows titles to be viewed or edited.
+        """
+        queryset = GameTitle.objects.all().order_by('title')
+        serializer_class = GameTitleSerializer
+        serializer = GameTitleSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class LoginView(APIView):
   permission_classes = (AllowAny,)
